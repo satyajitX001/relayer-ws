@@ -1,27 +1,28 @@
 import { test, describe, expect } from 'bun:test'
 
-const BACKEND_URL = 'ws://localhost:8080'
+const BACKEND_URL1 = 'ws://localhost:8080'
+const BACKEND_URL2 = 'ws://localhost:8081'
 
 describe('Chat Application', () => {
     test("Message send from room1 reached to another in room1", async () => {
-        const ws1 = new WebSocket(BACKEND_URL)
-        const ws2 = new WebSocket(BACKEND_URL)
+        const ws1 = new WebSocket(BACKEND_URL1)
+        const ws2 = new WebSocket(BACKEND_URL2)
         //wait for user to join
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve) => {
             let ws1Ready = false
             let ws2Ready = false
-            
+
             const checkBothReady = () => {
                 if (ws1Ready && ws2Ready) {
                     resolve()
                 }
             }
-            
-            ws1.onopen = () => { 
+
+            ws1.onopen = () => {
                 ws1Ready = true
                 checkBothReady()
             }
-            ws2.onopen = () => { 
+            ws2.onopen = () => {
                 ws2Ready = true
                 checkBothReady()
             }
@@ -32,7 +33,7 @@ describe('Chat Application', () => {
         ws2.send(JSON.stringify({ type: 'join-room', room: 'room1' }))
 
         //send message
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve) => {
             ws2.onmessage = (event) => {
                 const parsedData = JSON.parse(event.data)
                 expect(parsedData.type).toBe('chat')

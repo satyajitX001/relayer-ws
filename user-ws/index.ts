@@ -1,13 +1,31 @@
-import { WebSocketServer, WebSocket } from 'ws';
+//new WebScoket is the default js provided ws
+import { WebSocketServer, WebSocket as WebSocketClient } from 'ws';
 
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ port: 8081 });
 
 interface Room {
-    sockets: WebSocket[]
+    sockets: WebSocketClient[]
 }
 
 const rooms: Record<string, Room> = {
     // room1:{sockets:['ws1','ws2','ws3']} example rooms
+}
+
+const RELAYER_URL = "ws://localhost:3001";
+const relayerSocket = new WebSocket(RELAYER_URL);
+
+relayerSocket.onmessage = ({data}) => {
+    try {
+        const parsedData = JSON.parse(data)
+        if (parsedData.type === 'chat') {
+            const room = parsedData.room
+            rooms[room]?.sockets.map((socket) => {
+                socket.send(data)
+            })
+        }
+    } catch (error) {
+        console.log('Received non-JSON message from relayer:', data)
+    }
 }
 
 //ws is the websocket connection per user i.e if 20 user connect 20 times ws called
@@ -25,12 +43,7 @@ wss.on('connection', function connection(ws) {
             rooms[room].sockets.push(ws)
         }
         if (parsedData.type === 'chat') {
-            const room = parsedData.room
-            rooms[room]?.sockets.map((socket) => {
-                socket.send(data)
-            })
+            relayerSocket.send(data)
         }
     });
-
-    ws.send('something');
 });
