@@ -1,4 +1,7 @@
 //new WebScoket is the default js provided ws
+//if join-room store it in same server array
+//if chat send it to relayer
+//relayer will send it to all other users across all the servers
 import { WebSocketServer, WebSocket as WebSocketClient } from 'ws';
 
 const wss = new WebSocketServer({ port: 8081 });
